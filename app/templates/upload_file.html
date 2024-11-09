@@ -9,17 +9,29 @@
 <body class="bg-gray-100">
     <section class="min-h-screen flex items-center justify-center">
         <main class="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-            <h2 class="text-2xl font-bold text-center mb-4">Upload a File</h2>
-            {% if error %}
-                <p class="text-red-500 text-center mb-4">{{ error }}</p>
-            {% endif %}
-            {% if message %}
-                <p class="text-green-500 text-center mb-4">{{ message }}</p>
-            {% endif %}
+            <h2 class="text-2xl font-bold text-center mb-4">Upload and Preprocess Data</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <p class="text-{{ 'red' if category == 'error' else 'green' }}-500 text-center mb-4">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <form action="{{ url_for('api.upload_file') }}" method="POST" enctype="multipart/form-data">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Choose CSV File</label>
                     <input type="file" name="file" class="mt-1 block w-full p-2 border rounded-md shadow-sm">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Preprocessing Options</label>
+                    <div class="flex gap-3 items-center mb-2">
+                        <input type="checkbox" name="drop_missing" class="mr-2">
+                        <label>Drop Missing Values</label>
+                    </div>
+                    <div class="flex gap-3 items-center mb-4">
+                        <input type="checkbox" name="apply_scaling" class="mr-2">
+                        <label>Apply Scaling (Standardization)</label>
+                    </div>
                 </div>
                 <button type="submit" class="bg-blue-500 text-white w-full py-2 rounded-md hover:bg-blue-600">Upload</button>
             </form>

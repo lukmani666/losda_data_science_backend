@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Training</title>
+    <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-4">Model Training</h1>
+        
+        <form action="/model_training" method="post">
+            <!-- Model Type Selection -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Select Model Type:</label>
+                <select id="model_type" name="model_type" onchange="showModelOptions()" class="mt-1 block w-full">
+                    <option value="regression">Regression</option>
+                    <option value="classification">Classification</option>
+                    <option value="clustering">Clustering</option>
+                </select>
+            </div>
+
+            <!-- Regression Model Selection and Hyperparameter Input -->
+            <div id="regression_params" style="display:none;" class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Select Regression Model:</label>
+                <select name="regression_model" class="mt-1 block w-full">
+                    <option value="linear">Linear Regression</option>
+                    <option value="ridge">Ridge Regression</option>
+                </select>
+
+                <!-- Ridge Hyperparameters -->
+                <div class="mt-4" id="ridge_params" style="display:none;">
+                    <label class="block text-sm font-medium text-gray-700">Alpha Range (comma-separated):</label>
+                    <input type="text" name="alpha_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+                </div>
+            </div>
+
+            <!-- Classification Model Selection and Hyperparameters -->
+            <div id="classification_params" style="display:none;" class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Select Classification Model:</label>
+                <select name="classification_model" class="mt-1 block w-full">
+                    <option value="logistic">Logistic Regression</option>
+                    <option value="svc">Support Vector Classifier</option>
+                </select>
+
+                <!-- Logistic Regression Hyperparameters -->
+                <div class="mt-4" id="logistic_params" style="display:none;">
+                    <label class="block text-sm font-medium text-gray-700">C Range (comma-separated):</label>
+                    <input type="text" name="C_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+                </div>
+
+                <!-- SVC Hyperparameters -->
+                <div class="mt-4" id="svc_params" style="display:none;">
+                    <label class="block text-sm font-medium text-gray-700">C Range (comma-separated):</label>
+                    <input type="text" name="svc_C_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+                    <label class="block text-sm font-medium text-gray-700">Kernel (e.g., 'linear', 'rbf'):</label>
+                    <input type="text" name="svc_kernel" placeholder="linear, rbf" class="mt-1 block w-full">
+                </div>
+            </div>
+
+            <!-- Clustering Model Selection and Hyperparameters -->
+            <div id="clustering_params" style="display:none;" class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Select Clustering Model:</label>
+                <select name="clustering_model" class="mt-1 block w-full">
+                    <option value="kmeans">KMeans</option>
+                    <option value="hierarchical">Hierarchical Clustering</option>
+                </select>
+
+                <!-- KMeans Hyperparameters -->
+                <div class="mt-4" id="kmeans_params" style="display:none;">
+                    <label class="block text-sm font-medium text-gray-700">Number of Clusters (comma-separated):</label>
+                    <input type="text" name="kmeans_clusters" placeholder="e.g., 3, 5, 7" class="mt-1 block w-full">
+                </div>
+            </div>
+
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Train Model</button>
+        </form>
+    </div>
+
+    <!-- JavaScript to Show/Hide Model-Specific Parameters -->
+    <script>
+        function showModelOptions() {
+            var modelType = document.getElementById('model_type').value;
+
+            // Hide all sections initially
+            document.getElementById('regression_params').style.display = 'none';
+            document.getElementById('classification_params').style.display = 'none';
+            document.getElementById('clustering_params').style.display = 'none';
+            document.getElementById('ridge_params').style.display = 'none';
+            document.getElementById('logistic_params').style.display = 'none';
+            document.getElementById('svc_params').style.display = 'none';
+            document.getElementById('kmeans_params').style.display = 'none';
+
+            // Show sections based on model type
+            if (modelType === 'regression') {
+                document.getElementById('regression_params').style.display = 'block';
+            } else if (modelType === 'classification') {
+                document.getElementById('classification_params').style.display = 'block';
+            } else if (modelType === 'clustering') {
+                document.getElementById('clustering_params').style.display = 'block';
+            }
+        }
+
+        document.querySelector('select[name="regression_model"]').addEventListener('change', function() {
+            if (this.value === 'ridge') {
+                document.getElementById('ridge_params').style.display = 'block';
+            } else {
+                document.getElementById('ridge_params').style.display = 'none';
+            }
+        });
+
+        document.querySelector('select[name="classification_model"]').addEventListener('change', function() {
+            if (this.value === 'logistic') {
+                document.getElementById('logistic_params').style.display = 'block';
+                document.getElementById('svc_params').style.display = 'none';
+            } else if (this.value === 'svc') {
+                document.getElementById('svc_params').style.display = 'block';
+                document.getElementById('logistic_params').style.display = 'none';
+            }
+        });
+
+        document.querySelector('select[name="clustering_model"]').addEventListener('change', function() {
+            if (this.value === 'kmeans') {
+                document.getElementById('kmeans_params').style.display = 'block';
+            } else {
+                document.getElementById('kmeans_params').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

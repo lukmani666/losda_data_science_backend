@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Results</title>
+    <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-4">Model Results</h1>
+        
+        <!-- Show the model type and the best model parameters -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-2">Best Model</h2>
+            <p><strong>Model Type:</strong> {{ model.__class__.__name__ }}</p>
+            <p><strong>Best Parameters:</strong> {{ model.get_params() }}</p>
+        </div>
+
+        <!-- If regression model, show regression metrics -->
+        {% if regression_metrics %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-2">Regression Metrics</h2>
+            <p><strong>R² Score:</strong> {{ regression_metrics['r2_score'] }}</p>
+            <p><strong>Mean Squared Error (MSE):</strong> {{ regression_metrics['mse'] }}</p>
+            <p><strong>Mean Absolute Error (MAE):</strong> {{ regression_metrics['mae'] }}</p>
+        </div>
+        {% endif %}
+
+        <!-- If classification model, show evaluation metrics -->
+        {% if metrics %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-2">Classification Metrics</h2>
+            <p><strong>Accuracy:</strong> {{ metrics['accuracy'] }}</p>
+            <p><strong>Precision:</strong> {{ metrics['precision'] }}</p>
+            <p><strong>Recall:</strong> {{ metrics['recall'] }}</p>
+            <p><strong>F1 Score:</strong> {{ metrics['f1_score'] }}</p>
+        </div>
+        {% endif %}
+
+        <!-- If clustering model, show clustering specific metrics -->
+        {% if inertia %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-2">Clustering Metrics</h2>
+            <p><strong>Inertia (KMeans):</strong> {{ inertia }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Link to go back to model selection -->
+        <a href="/model_training" class="bg-blue-500 text-white px-4 py-2 rounded">Go Back</a>
+    </div>
+</body>
+</html>

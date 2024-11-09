@@ -15,13 +15,13 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        hashed_password = generate_password_hash(password, method='sha256')
-        new_user = User(username=username, email=email, password=hashed_password)
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        new_user = User(username=username, email=email, password_hash=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
         flash('User registered successfully!')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('api.index'))
     
     return render_template('register.html')
 
@@ -33,11 +33,19 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user.password, password):
+        if user is None:
+            flash("Email does not exist.", "error")
+            return redirect(url_for('auth.login'))
+
+        
+        if not check_password_hash(user.password_hash, password):
+            flash("Incorrect password.", "error")
+            return redirect(url_for('auth.login'))
+
+        if user and check_password_hash(user.password_hash, password):
             login_user(user)
             return redirect(url_for('api.index'))
-        
-        flash('Login failed. Check your email and password.')
+    
         return redirect(url_for('auth.login'))
     
     return render_template('login.html')
