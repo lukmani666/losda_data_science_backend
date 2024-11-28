@@ -16,7 +16,8 @@ flask db migrate -m "Initial migration"
 flask db upgrade
 
 # To run flask for this project
-flask run
+flask run --reload
+
 
 #  To build the Tailwind CSS:
 npx tailwindcss -i ./app/static/css/styles.css -o ./app/static/css/output.css --watch

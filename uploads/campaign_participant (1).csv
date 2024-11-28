@@ -1,0 +1,6 @@
+"id","reference_id","percentage_contribution","contribution_amount_currency","contribution_amount","has_paid","requested_refund","created_at","updated_at","campaign_id","profile_id","delivery_fee","participant_status","shipping_address_id"
+"28","f4c10053-162c-4a44-ae6a-0916333ef1dc","10.00","NGN","9900.00",True,False,"2024-10-09 11:50:04.608629+01","2024-10-09 11:52:36.71494+01","7","1","500.00","processing",NULL
+"38","481f2561-feb4-4a33-98b8-04f65226707c","8.00","NGN","8020.00",True,False,"2024-11-05 15:57:41.311303+01","2024-11-05 16:00:00.859825+01","7","3","500.00","processing","2"
+"62","a76b0d4e-ffde-4d2c-9be1-24f4112c43d3","10.00","NGN","9900.00",False,False,"2024-11-12 17:48:41.000379+01","2024-11-12 17:48:41.000426+01","7","4","500.00","pending","26"
+"64","01eb3b7c-39dc-4976-94bd-68ea171d247e","30.00","NGN","27500.00",False,False,"2024-11-13 14:38:58.660581+01","2024-11-13 14:38:58.660604+01","14","4","500.00","pending","28"
+"65","09b8eb1f-8423-42e8-8394-ef43f517176a","5.00","NGN","5000.00",False,False,"2024-11-15 11:07:54.052013+01","2024-11-15 11:07:54.052028+01","14","1","500.00","pending","29"

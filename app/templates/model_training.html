@@ -6,77 +6,95 @@
     <title>Model Training</title>
     <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
 </head>
-<body>
-    <div class="container mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-4">Model Training</h1>
-        
-        <form action="/model_training" method="post">
-            <!-- Model Type Selection -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Select Model Type:</label>
-                <select id="model_type" name="model_type" onchange="showModelOptions()" class="mt-1 block w-full">
-                    <option value="regression">Regression</option>
-                    <option value="classification">Classification</option>
-                    <option value="clustering">Clustering</option>
-                </select>
-            </div>
+<body class="bg-gray-100">
+    <section class="min-h-screen flex items-center justify-center">
+        <main class="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
 
-            <!-- Regression Model Selection and Hyperparameter Input -->
-            <div id="regression_params" style="display:none;" class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Select Regression Model:</label>
-                <select name="regression_model" class="mt-1 block w-full">
-                    <option value="linear">Linear Regression</option>
-                    <option value="ridge">Ridge Regression</option>
-                </select>
-
-                <!-- Ridge Hyperparameters -->
-                <div class="mt-4" id="ridge_params" style="display:none;">
-                    <label class="block text-sm font-medium text-gray-700">Alpha Range (comma-separated):</label>
-                    <input type="text" name="alpha_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+            <h1 class="text-2xl font-bold mb-4">Model Training</h1>
+            
+            <form action="{{ url_for('api.model_training') }}" method="post">
+                <!-- Model Type Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Select Model Type:</label>
+                    <select id="model_type" name="model_type" onchange="showModelOptions()" class="mt-1 block w-full">
+                        <option value="" selected disabled>--Select Model Type--</option>
+                        <option value="regression">Regression</option>
+                        <option value="classification">Classification</option>
+                        <option value="clustering">Clustering</option>
+                    </select>
                 </div>
-            </div>
-
-            <!-- Classification Model Selection and Hyperparameters -->
-            <div id="classification_params" style="display:none;" class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Select Classification Model:</label>
-                <select name="classification_model" class="mt-1 block w-full">
-                    <option value="logistic">Logistic Regression</option>
-                    <option value="svc">Support Vector Classifier</option>
-                </select>
-
-                <!-- Logistic Regression Hyperparameters -->
-                <div class="mt-4" id="logistic_params" style="display:none;">
-                    <label class="block text-sm font-medium text-gray-700">C Range (comma-separated):</label>
-                    <input type="text" name="C_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+    
+                <!-- Regression Model Selection and Hyperparameter Input -->
+                <div id="regression_params" style="display:none;" class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Select Regression Model:</label>
+                    <select name="regression_model" class="mt-1 block w-full">
+                        <option value="linear">Linear Regression</option>
+                        <option value="ridge">Ridge Regression</option>
+                    </select>
+    
+                    <!-- Ridge Hyperparameters -->
+                    <div class="mt-4" id="ridge_params" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700">Alpha Range (comma-separated):</label>
+                        <input type="text" name="alpha_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+                    </div>
+                </div>
+    
+                <!-- Classification Model Selection and Hyperparameters -->
+                <div id="classification_params" style="display:none;" class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Select Classification Model:</label>
+                    <select name="classification_model" class="mt-1 block w-full">
+                        <option value="logistic">Logistic Regression</option>
+                        <option value="svc">Support Vector Classifier</option>
+                    </select>
+    
+                    <!-- Logistic Regression Hyperparameters -->
+                    <div class="mt-4" id="logistic_params" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700">C Range (comma-separated):</label>
+                        <input type="text" name="C_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+                    </div>
+    
+                    <!-- SVC Hyperparameters -->
+                    <div class="mt-4" id="svc_params" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700">SVC C Range (comma-separated):</label>
+                        <input type="text" name="svc_C_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
+                        <!-- <label class="block text-sm font-medium text-gray-700">Kernel (e.g., 'linear', 'rbf'):</label>
+                        <input type="text" name="svc_kernel" placeholder="linear, rbf" class="mt-1 block w-full"> -->
+                    </div>
+                </div>
+    
+                <!-- Clustering Model Selection and Hyperparameters -->
+                <div id="clustering_params" style="display:none;" class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Select Clustering Model:</label>
+                    <select name="clustering_model" class="mt-1 block w-full">
+                        <option value="kmeans">KMeans</option>
+                        <option value="hierarchical">Hierarchical Clustering</option>
+                    </select>
+    
+                    <!-- KMeans Hyperparameters -->
+                    <div class="mt-4" id="kmeans_params" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700">Number of Clusters (comma-separated):</label>
+                        <input type="text" name="kmeans_clusters" placeholder="e.g., 3, 5, 7" class="mt-1 block w-full">
+                    </div>
                 </div>
 
-                <!-- SVC Hyperparameters -->
-                <div class="mt-4" id="svc_params" style="display:none;">
-                    <label class="block text-sm font-medium text-gray-700">C Range (comma-separated):</label>
-                    <input type="text" name="svc_C_range" placeholder="e.g., 0.1, 1.0, 10.0" class="mt-1 block w-full">
-                    <label class="block text-sm font-medium text-gray-700">Kernel (e.g., 'linear', 'rbf'):</label>
-                    <input type="text" name="svc_kernel" placeholder="linear, rbf" class="mt-1 block w-full">
-                </div>
-            </div>
-
-            <!-- Clustering Model Selection and Hyperparameters -->
-            <div id="clustering_params" style="display:none;" class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Select Clustering Model:</label>
-                <select name="clustering_model" class="mt-1 block w-full">
-                    <option value="kmeans">KMeans</option>
-                    <option value="hierarchical">Hierarchical Clustering</option>
-                </select>
-
-                <!-- KMeans Hyperparameters -->
-                <div class="mt-4" id="kmeans_params" style="display:none;">
+                <!-- Hierarchical Clustering Hyperparameters -->
+                <div class="mt-4" id="hierarchical_params" style="display:none;">
                     <label class="block text-sm font-medium text-gray-700">Number of Clusters (comma-separated):</label>
-                    <input type="text" name="kmeans_clusters" placeholder="e.g., 3, 5, 7" class="mt-1 block w-full">
+                    <input type="text" name="hierarchical_clusters" placeholder="e.g., 2, 4, 6" class="mt-1 block w-full">
+                    
+                    <label class="block text-sm font-medium text-gray-700 mt-4">Linkage Method:</label>
+                    <select name="hierarchical_linkage" class="mt-1 block w-full">
+                        <option value="ward">Ward</option>
+                        <option value="complete">Complete</option>
+                        <option value="average">Average</option>
+                        <option value="single">Single</option>
+                    </select>
                 </div>
-            </div>
-
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Train Model</button>
-        </form>
-    </div>
+    
+                <button type="submit" class="bg-blue-500 text-white mt-10 px-4 py-2 rounded">Train Model</button>
+            </form>
+        </main>
+    </section>
 
     <!-- JavaScript to Show/Hide Model-Specific Parameters -->
     <script>
@@ -91,6 +109,7 @@
             document.getElementById('logistic_params').style.display = 'none';
             document.getElementById('svc_params').style.display = 'none';
             document.getElementById('kmeans_params').style.display = 'none';
+            document.getElementById('hierarchical_params').style.display = 'none';
 
             // Show sections based on model type
             if (modelType === 'regression') {
