@@ -2,7 +2,7 @@ import pickle
 import os
 import pandas as pd
 import numpy as np
-from flask import Flask, Blueprint, request, flash, redirect, url_for, render_template, session
+from flask import Flask, Blueprint, request, flash, redirect, url_for, render_template, send_file, session
 from flask_login import login_required, current_user
 from app import db
 from io import BytesIO
@@ -44,34 +44,22 @@ def upload_file():
         return redirect(url_for('auth.login'))
     
     if request.method == 'GET':
-        return render_template('upload_file.html')
+        return render_template('upload_file.html', show_preprocessing_options=False)
     
     if request.method == 'POST':
-        if 'file' not in request.files:
-            flash("No file uploaded. Please upload a CSV file.", "error")
-            return redirect(url_for('api.upload_file'))
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash("No selected file", "error")
-            return redirect(url_for('api.upload_file'))
+        step = request.form.get('step')
 
-        upload_folder = app.config['UPLOAD_FOLDER']
+        if step == 'preprocessing':
+            file_path = session.get('uploaded_file_path')
+            filename = session.get('uploaded_filename')
+            if not file_path or not os.path.exists(file_path):
+                flash("Session expired or file missing. Please re-upload.", "error")
+                return redirect(url_for('api.upload_file'))
 
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
-        
-        file_path = os.path.join(upload_folder, file.filename)
-        file.save(file_path)
-        
-        try:
             data = pd.read_csv(file_path)
 
-            if data.empty or len(data.columns) == 0:
-                raise ValueError("The uploaded file has no valid columns to parse.")
-
             if 'drop_missing' in request.form:
-                data = data.dropna()
+                data.dropna(inplace=True)
 
             if 'apply_scaling' in request.form:
                 scaler = StandardScaler()
@@ -79,22 +67,114 @@ def upload_file():
                 data[numerical_cols] = scaler.fit_transform(data[numerical_cols]) 
 
             cleaned_data_folder = app.config['CLEANED_DATA_FOLDER']
-            if not os.path.exists(cleaned_data_folder):
-                os.makedirs(cleaned_data_folder)
+            os.makedirs(cleaned_data_folder, exist_ok=True)
+            # if not os.path.exists(cleaned_data_folder):
+            #     os.makedirs(cleaned_data_folder)
 
+            cleaned_file_path = os.path.join(cleaned_data_folder, 'cleaned_' + filename)
             # output = BytesIO()
-            cleaned_file_path = os.path.join(cleaned_data_folder, 'cleaned_' + file.filename)
             data.to_csv(cleaned_file_path, index=False)
             # output.seek(0)
 
             session['cleaned_data_path'] = cleaned_file_path
 
-            # flash("File processed successfully.", "success")
-            # send_file(output, mimetype="text/csv", attachment_filename="cleaned_data.csv", as_attachment=True)
-            return redirect(url_for('api.model_training'))
-        except Exception as e:
-            flash(f"File processing failed: {str(e)}", "error")
-            return redirect(url_for('api.upload_file'))
+            # send_file(output, mimetype="text/csv", download_name="cleaned_data.csv", as_attachment=True)
+
+            # return redirect(url_for('api.model_training'))
+            return redirect(url_for('api.visualization'))
+
+        else:
+            if 'file' not in request.files:
+                flash("No file uploaded. Please upload a CSV file.", "error")
+                return redirect(url_for('api.upload_file'))
+            
+            file = request.files['file']
+            if file.filename == '':
+                flash("No selected file", "error")
+                return redirect(url_for('api.upload_file'))
+
+            upload_folder = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+
+            # if not os.path.exists(upload_folder):
+            #     os.makedirs(upload_folder)
+            
+            file_path = os.path.join(upload_folder, file.filename)
+            file.save(file_path)
+            
+            try:
+                data = pd.read_csv(file_path)
+
+                if data.empty or len(data.columns) == 0:
+                    raise ValueError("The uploaded file has no valid columns to parse.")
+
+                
+                missing_columns = data.columns[data.isnull().any()].to_list()
+                num_missing_rows = data.isnull().any(axis=1).sum()
+                numerical_cols = data.select_dtypes(include=['float64', 'int64']).columns
+                has_numerical_cols = len(numerical_cols) > 0
+
+                session['uploaded_file_path'] = file_path
+                session['uploaded_filename'] = file.filename
+
+                message_parts = []
+
+                if missing_columns:
+                    message_parts.append(
+                        f"Missing data detected in columns: {', '.join(missing_columns)} "
+                        f"({num_missing_rows} row(s) affected)."
+                    )
+
+                if has_numerical_cols:
+                    message_parts.append("Numerical columns detected, scaling option is available.")
+                
+                if message_parts:
+                    flash(message_parts, "warning")
+
+                # missing_msg = {
+                #     f"Missing data detected in columns: {', '.join(missing_columns)}. ",
+                #     f"Total rows with missing values: {num_missing_rows}."
+                # }
+                # flash(missing_msg, "warning")
+                if missing_columns or has_numerical_cols:
+                    return render_template(
+                        'upload_file.html',
+                        show_preprocessing_options=True,
+                        missing_columns=missing_columns,
+                        num_missing_rows=num_missing_rows,
+                        has_numerical_cols=has_numerical_cols
+
+                    )
+
+                # if 'drop_missing' in request.form:
+                #     data = data.dropna(inplace=True)
+
+                # if 'apply_scaling' in request.form:
+                #     scaler = StandardScaler()
+                #     numerical_cols = data.select_dtypes(include=['float64', 'int64']).columns
+                #     data[numerical_cols] = scaler.fit_transform(data[numerical_cols]) 
+
+                # cleaned_data_folder = app.config['CLEANED_DATA_FOLDER']
+                # if not os.path.exists(cleaned_data_folder):
+                #     os.makedirs(cleaned_data_folder)
+
+                # cleaned_file_path = os.path.join(cleaned_data_folder, 'cleaned_' + file.filename)
+                # output = BytesIO()
+                # data.to_csv(output, index=False)
+                # output.seek(0)
+
+                # session['cleaned_data_path'] = cleaned_file_path
+
+                # send_file(output, mimetype="text/csv", download_name="cleaned_data.csv", as_attachment=True)
+
+                # flash("File processed successfully.", "success")
+                # send_file(output, mimetype="text/csv", attachment_filename="cleaned_data.csv", as_attachment=True)
+                flash("No missing data found. File is ready to be processed.", "success")
+                # return redirect(url_for('api.model_training'))
+                return redirect(url_for('api.visualization'))
+            except Exception as e:
+                flash(f"File processing failed: {str(e)}", "error")
+                return redirect(url_for('api.upload_file'))
         
     
 @api.route('/model-training', methods=['GET', 'POST'])
@@ -278,6 +358,59 @@ def predict():
     except Exception as e:
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('api.'))
+
+
+@api.route('/visualization', methods=['GET', 'POST'])
+def visualization():
+
+    message_parts = []
+    
+    cleaned_file_path = session.get('cleaned_data_path')
+    if not cleaned_file_path or not os.path.exists(cleaned_file_path):
+        message_parts.append("Cleaned data not found. Please upload and preprocess a file first.")
+        flash(message_parts, "error")
+        return redirect(url_for('api.upload_file'))
+    
+    data = pd.read_csv(cleaned_file_path)
+    column_names = data.columns.to_list()
+    # pie_data = None
+    selected_column = None
+    chart_type = None
+    chart_data = {}
+
+    if request.method == 'POST':
+        selected_column = request.form.get('selected_column')
+
+        if selected_column and selected_column in data.columns:
+            unique_vals = data[selected_column].nunique()
+            dtype = data[selected_column].dtype
+
+            if pd.api.types.is_numeric_dtype(dtype):
+                chart_type = 'bar'
+                counts, bins = np.histogram(data[selected_column].dropna(), bins=10)
+                
+                chart_data = {
+                    'labels': [f'{round(bins[i], 2)} - {round(bins[i+1], 2)}' for i in range(len(counts))],
+                    'values': counts.tolist()
+                }
+            # pie_data = data[selected_column].value_counts().to_dict()
+            elif unique_vals <= 20:
+                chart_type = 'pie'
+                value_counts = data[selected_column].value_counts()
+                chart_data = value_counts.to_dict()
+            else:
+                flash(f"The selected column has {unique_vals} unique values. Visualization is skipped to avoid clutter.", "warning")
+
+    
+    return render_template(
+        'visualization.html',
+        column_names=column_names,
+        # pie_data=pie_data,
+        selected_column=selected_column,
+        chart_data = chart_data,
+        chart_type=chart_type
+    )
+
 
 
 

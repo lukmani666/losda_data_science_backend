@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+
+    <div class="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Choose a Column to Visualize</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message_list in messages %}
+                    
+                        <p class="text-{{ 'red' if category == 'error' else category == 'warning' and 'yellow' or 'green' }}-600 text-sm mb-4">
+                            
+                            {{ message }}
+                                
+                           
+                        </p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="flex flex-col md:flex-row items-center justify-center gap-4 mb-6">
+            <div class="w-full md:w-2/3">
+                <label for="selected_column" class="block text-sm font-medium text-gray-700 mb-1">Select Column:</label>
+                <select name="selected_column" id="selected_column" required class="w-full px-3 py-2 border border-gray-300     rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-200">
+                    <option value="" disabled selected>Select column</option>
+                    {% for col in column_names %}
+                        <option value="{{ col }}" {% if selected_column == col %}selected{% endif %}>{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Visualize</button>
+            </div>
+        </form>
+
+        <div class="flex justify-end mb-4">
+            <a href="{{ url_for('api.model_training') }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                Train Model
+            </a>
+        </div>
+
+        {% if chart_data and chart_type %}
+            <div class="text-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-700">{{ chart_type.capitalize() }} Chart for: <span class="text-indigo-600">{{ selected_column }}</span></h3>
+            </div>
+            <div class="flex justify-center">
+                <canvas id="dataChart" class="w-full max-w-xl" height="400"></canvas>
+            </div>
+            <script>
+                const chartType = "{{ chart_type }}";
+                const chartData = {{ chart_data | tojson | safe }};
+                const ctx = document.getElementById('dataChart').getContext('2d');
+
+                const config = {
+                    type: chartType,
+                    data: {
+                        labels: chartType === 'pie' ? Object.keys(chartData) : chartData.labels,
+                        datasets: [{
+                            label: chartType === 'pie' ? 'Value Counts' : 'Frequency',
+                            data: chartType === 'pie' ? Object.values(chartData) : chartData.values,
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56',
+                                '#8AFFC1', '#C38DFF', '#FFA07A',
+                                '#9FE2BF', '#DDA0DD', '#6495ED'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: chartType === 'pie' ? 'right' : 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Column Visualization'
+                            }
+                        },
+                        scales: chartType === 'bar' ? {
+                            x: { title: { display: true, text: 'Range' } },
+                            y: { title: { display: true, text: 'Frequency' } }
+                        } : {}
+                    }
+                };
+
+                new Chart(ctx, config);
+            </script>
+        {% elif selected_column %}
+            <p class="text-center text-red-500 font-medium">No data to display for {{ selected_column }}.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -12,8 +12,18 @@
             <h2 class="text-2xl font-bold text-center mb-4">Upload and Preprocess Data</h2>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    {% for category, message in messages %}
-                        <p class="text-{{ 'red' if category == 'error' else 'green' }}-500 text-center mb-4">{{ message }}</p>
+                    {% for category, message_list in messages %}
+                        {% if message_list is iterable and message is not string %}
+                            <div class="text-{{ 'red' if category == 'error' else category == 'warning' and 'yellow' or 'green' }}-600 text-sm mb-4">
+                                <ol class="list-decimal list-inside space-y-1">
+                                    {% for msg in message_list %}
+                                        <li>{{ msg }}</li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        {% else %}
+                            <p class="text-{{ 'red' if category == 'error' else 'green' }}-500 text-center mb-4">{{ message_list }}</p>
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
             {% endwith %}
@@ -22,18 +32,34 @@
                     <label class="block text-sm font-medium text-gray-700">Choose CSV File</label>
                     <input type="file" name="file" class="mt-1 block w-full p-2 border rounded-md shadow-sm">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Preprocessing Options</label>
-                    <div class="flex gap-3 items-center mb-2">
-                        <input type="checkbox" name="drop_missing" class="mr-2">
-                        <label>Drop Missing Values</label>
+                {% if show_preprocessing_options %}
+                    <input type="hidden" name="step" value="preprocessing">
+                    <div class="mb-4">
+                        <label for="" class="block text-sm font-medium text-gray-700">Missing Data Detected</label>
+                        <p class="text-red-500 text-sm mt-1">Missing Columns: {{ missing_columns | join(', ') }}</p>
+                        <p class="text-red-500 text-sm">Total Rows with Missing Data: {{ num_missing_rows }}</p>
                     </div>
-                    <div class="flex gap-3 items-center mb-4">
-                        <input type="checkbox" name="apply_scaling" class="mr-2">
-                        <label>Apply Scaling (Standardization)</label>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Preprocessing Options</label>
+                        <div class="flex gap-3 items-center mb-2">
+                            <input type="checkbox" name="drop_missing" class="mr-2">
+                            <label>Drop Missing Values</label>
+                        </div>
+                        {% if has_numerical_cols %}
+                            <div class="flex gap-3 items-center mb-4">
+                                <input type="checkbox" name="apply_scaling" class="mr-2">
+                                <label>Apply Scaling (Standardization)</label>
+                            </div>
+                        {% endif %}
                     </div>
-                </div>
-                <button type="submit" class="bg-blue-500 text-white w-full py-2 rounded-md hover:bg-blue-600">Upload</button>
+                {% endif %}
+                <button type="submit" class="bg-blue-500 text-white w-full py-2 rounded-md hover:bg-blue-600">
+                    {% if show_preprocessing_options %}
+                        Apply Preprocessing
+                    {% else %}
+                        Upload
+                    {% endif %}
+                </button>
             </form>
         </main>
     </section>
