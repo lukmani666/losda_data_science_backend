@@ -9,11 +9,12 @@ pip install -r requirements.txt
 # Initialize migrations
 flask db init
 
+# Apply the migrations to the database
+flask db upgrade
+
 # Create migration scripts
 flask db migrate -m "Initial migration"
 
-# Apply the migrations to the database
-flask db upgrade
 
 # To run flask for this project
 flask run --reload

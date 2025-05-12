@@ -13,7 +13,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message_list in messages %}
-                        {% if message_list is iterable and message is not string %}
+                        {% if message_list is iterable and message_list is not string %}
                             <div class="text-{{ 'red' if category == 'error' else category == 'warning' and 'yellow' or 'green' }}-600 text-sm mb-4">
                                 <ol class="list-decimal list-inside space-y-1">
                                     {% for msg in message_list %}

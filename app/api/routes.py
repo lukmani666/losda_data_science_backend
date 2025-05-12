@@ -20,6 +20,13 @@ from sklearn.metrics import (
     recall_score,
     f1_score
 )
+import subprocess
+import threading
+import json
+import uuid
+import glob
+import time
+
 
 app = Flask(__name__)
 
@@ -81,7 +88,7 @@ def upload_file():
             # send_file(output, mimetype="text/csv", download_name="cleaned_data.csv", as_attachment=True)
 
             # return redirect(url_for('api.model_training'))
-            return redirect(url_for('api.visualization'))
+            return redirect(url_for('api.dashboard'))
 
         else:
             if 'file' not in request.files:
@@ -129,7 +136,7 @@ def upload_file():
                     message_parts.append("Numerical columns detected, scaling option is available.")
                 
                 if message_parts:
-                    flash(message_parts, "warning")
+                    flash("".join(message_parts), "warning")
 
                 # missing_msg = {
                 #     f"Missing data detected in columns: {', '.join(missing_columns)}. ",
@@ -171,7 +178,8 @@ def upload_file():
                 # send_file(output, mimetype="text/csv", attachment_filename="cleaned_data.csv", as_attachment=True)
                 flash("No missing data found. File is ready to be processed.", "success")
                 # return redirect(url_for('api.model_training'))
-                return redirect(url_for('api.visualization'))
+                # return redirect(url_for('api.visualization'))
+                return redirect(url_for('api.dashboard'))
             except Exception as e:
                 flash(f"File processing failed: {str(e)}", "error")
                 return redirect(url_for('api.upload_file'))
@@ -410,6 +418,52 @@ def visualization():
         chart_data = chart_data,
         chart_type=chart_type
     )
+
+
+@api.route("/dashboard")
+def dashboard():
+    cleaned_file_path = session.get("cleaned_data_path")
+
+    if not cleaned_file_path:
+        flash("No cleaned file found. Please preprocess first.", "error")
+        return redirect(url_for("api.upload_file"))
+    
+    user_id = str(uuid.uuid4())
+    session["streamlit_user_id"] = user_id
+
+    context_path = f"streamlit_app/context_{user_id}.json"
+    with open(context_path, "w") as f:
+        json.dump({"cleaned_data_path": cleaned_file_path}, f)
+
+
+    def run_streamlit():
+        subprocess.run([
+            "streamlit", "run", "streamlit_app/dashboard.py",
+            "--server.headless", "true"
+        ])
+
+    if not getattr(dashboard, "started", False):
+        threading.Thread(target=run_streamlit, daemon=True).start()
+        dashboard.started = True
+    
+    def clean_old_context_file(folder="streamlit_app", max_age_seconds=600):
+        now = time.time()
+        for file in glob.glob(os.path.join(folder, "context_*.json")):
+            if os.path.isfile(file):
+                file_age = now - os.path.getmtime(file)
+                if file_age > max_age_seconds:
+                    try:
+                        os.remove(file)
+                        print(f"Deleted old context file: {file}")
+                    except Exception as e:
+                        print(f"Error deleting file {file}: {e}")
+
+    clean_old_context_file()
+
+        
+    
+    
+    return redirect(f"http://localhost:8501/dashboard/?user_id={user_id}")
 
 
 
